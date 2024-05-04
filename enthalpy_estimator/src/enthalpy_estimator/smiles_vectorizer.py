@@ -5,8 +5,6 @@ from rdkit.Chem import AllChem
 from rdkit.Chem import rdqueries
 import numpy as np
 
-import pandas as pd
-
 class SMILESVectorizer(MolVectorizer):
     def __init__(self, all_species, isodesmic=False):
         self.all_species = all_species
