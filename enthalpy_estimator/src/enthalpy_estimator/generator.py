@@ -31,7 +31,7 @@ class ReactionGenerator:
         def read_energies(entry, r):
             try:
                 with open(r['energies'], 'r') as f:
-                    for l in f.readlines()[2:]:
+                    for l in f.readlines():
                         if '=' in l:
                             l_split = [s.strip() for s in l.split('=')]
                             entry[l_split[0]] = float(l_split[-1])
@@ -72,7 +72,7 @@ class ReactionGenerator:
         if not os.path.exists(out_dir):
             os.makedirs(out_dir)
 
-        with open(out_dir + self.target['xyz'].split('/')[-1][:-4] + '.all', 'w') as f:
+        with open(out_dir + self.target['xyz'].split('/')[-1].replace('.xyz', '.all'), 'w+') as f:
             for rxn in self.reactions:
                 entry = []
                 entry.append(self.vectorizer.reaction_to_str(rxn))
@@ -96,14 +96,16 @@ class ReactionGenerator:
                     E_IT = E_sum['E(DLPNO-CCSD(T)/TZ-IT)']-E_sum['E(DLPNO-CCSD(T)/CC-PVTZ)']
                     E_SO = E_sum['E(DKH correction)']
                     E_r = E_sum['E(DLPNO-CCSD(T)/CBS)'] + E_CV + E_IT + E_SO
+                    E_r_HF = E_sum['E(HF/CBS)'] + E_SO
+                    E_corr_r = E_r - E_r_HF
                 else:
                     E_CV = 0
                     E_IT = 0
                     E_SO = 0
                     E_r = E_sum['E']
+                    E_r_HF = 0
+                    E_corr_r = E_r
                     
-                E_r_HF = E_sum['E(HF/CBS)'] + E_SO
-                E_corr_r = E_r - E_r_HF
                 
                 H_r = E_r + E_sum['Hcorr']
                 H_f = E_sum['dfH'] - H_r*eh_to_cal

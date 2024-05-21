@@ -1,15 +1,15 @@
 [tool.poetry]
 name = "enthalpy_estimator"
-version = "1"
+version = "0.6"
 description = "A package to automatically generate reactions and estimate enthalpy."
 authors = ["Egor Nosach"]
 license = "GNU General Public License v3.0"
 readme = "README.md"
 
 [tool.poetry.dependencies]
-python = ">=3.10"
-numpy = ">=1.26"
-scipy = ">=1.14"
+python = ">=3.9"
+scipy = ">=1.13.0"
+rdkit = ">=2022.03.5"
 
 [tool.poetry.dev-dependencies]
 

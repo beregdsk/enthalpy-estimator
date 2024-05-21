@@ -43,12 +43,12 @@ class SMILESVectorizer(MolVectorizer):
         self.elements = np.array(sorted(
             {a.GetAtomicNum() for mol in self.mols for a in mol.GetAtoms()}, reverse=True))
         self.bonds = [Chem.MolFromSmarts(s) for s in (
-            '[#6]-[#1]', '[#6]-[#6]', '[#6]=[#6]', '[#6]#[#6]', '[#6]:[#6]')]
+            '[#6]-[#1]', '[#6]-[#6]', '[#6]=,:[#6]', '[#6]#[#6]')]
         self.symbols = np.array(
             [Chem.GetPeriodicTable().GetElementSymbol(int(e)) for e in self.elements])
 
         self.dim = len(self.symbols) + \
             (len(self.bonds) if self.isodesmic else 0)
 
-        self.basis = np.array([self.mol_to_vec(mol) for mol in self.mols])
+        self.basis = np.array([self.mol_to_vec(mol) for mol in self.mols], dtype=np.int32)
 

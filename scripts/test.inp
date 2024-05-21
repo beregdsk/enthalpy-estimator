@@ -1,0 +1,21 @@
+#two methods are available: gen or est
+method: est
+
+#path to table describing reference species
+reference: reference.json
+
+#paths to target compound files
+xyz: data/m1_00_53-70-3_C22H14_wB97XD.xyz
+energy: data/m1_00_53-70-3_C22H14_wB97XD_ccsdt_cc-pvqz_ecp.txt
+td: data/m1_00_53-70-3_C22H14_wB97XD.td
+
+#whether to use only isodesmic reactions or not
+iso: False
+
+#SMILES representation of target compound, optional
+#smiles: C=C
+
+#arguments passed to the .run() function
+#gen: output_path max_number_of_reactions
+#est: output_path bool_optimize_gradient bool_minimize_uncertainty gradient_threshold min_references
+args: './out/' True True

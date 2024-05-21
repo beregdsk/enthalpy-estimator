@@ -41,6 +41,14 @@ class MolVectorizer:
                     
         return s
     
+    def species_to_name(self, i):
+        if 'name' in self.all_species[i] \
+            and self.all_species[i]['name'] != '':
+            
+            return self.all_species[i]['name']
+        else:
+            return self.vector_to_str(self.basis[i])
+    
     def reaction_to_str(self, rxn):
         r = rxn * np.sign(rxn[0])
         reagents = np.where(r > 0)[0]
@@ -65,20 +73,14 @@ class MolVectorizer:
         s = ''
         s += '+'.join(
                 ''.join([str(r[i].item()) + '*'
-                         if abs(r[i].item()) != 1
-                         else '', 
-                         self.all_species[i]['name']
-                         if 'name' in self.all_species[i]
-                         else self.vector_to_str(self.basis[i])]) 
+                         if abs(r[i].item()) != 1 else '', 
+                         self.species_to_name(i)]) 
                 for i in reagents)
         s += '->'
         s += '+'.join(
                 ''.join([str(-r[i].item()) + '*'
-                         if abs(r[i].item()) != 1
-                         else '', 
-                         self.all_species[i]['name']
-                         if 'name' in self.all_species[i]
-                         else self.vector_to_str(self.basis[i])]) 
+                         if abs(r[i].item()) != 1 else '', 
+                         self.species_to_name(i)]) 
                 for i in products)
 
         return s

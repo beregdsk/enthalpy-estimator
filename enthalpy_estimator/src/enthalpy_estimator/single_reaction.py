@@ -2,6 +2,7 @@ from .cfg import *
 
 import numpy as np
 import scipy as sp
+import os
 
 class EnthalpyEstimator:
     def __init__(self, target, reference, vectorizer, isodesmic=False):
@@ -66,7 +67,7 @@ class EnthalpyEstimator:
             
             if r != self.target:
                 self.dfH.append(r['dfH'] - drH)
-                self.u.append(r['u']**2)
+                self.u.append(r['u'])
             else:
                 self.dfH.append(-drH)
                 self.u.append(0)
@@ -75,20 +76,40 @@ class EnthalpyEstimator:
         self.dfH = np.array(self.dfH)
         self.u = np.array(self.u)
     
-    def run(self, optimize=False, minimize=True, dfH_thres=0.5, min_ref=8):
+    def run(self, out_dir=None, optimize=False, minimize=True, dfH_thres=0.5, min_ref=8):
         dfH, u = self.calc(minimize=minimize)
 
+        if out_dir is not None:
+            if not os.path.exists(out_dir):
+                os.makedirs(out_dir)
+            f = open(out_dir + self.target['xyz'].split('/')[-1].replace('.xyz', '.sgr'), 'w+')
+        else:
+            f = None
+
         if optimize:
+            print('dfH\t', 'u\t', 'grad', 'excluded', file=f, sep='\t')
             to_exclude = []
             while (np.linalg.norm(self.dfH_grad) > dfH_thres 
                    and len(self.get_basis()) - len(to_exclude) > min_ref):
-                to_exclude.append(np.argmax(np.abs(self.dfH_grad[1:])))
+                e = np.argmax(np.abs(self.dfH_grad[1:]))
+                
+                to_exclude.append(e)
                 to_exclude.sort()
                 
                 dfH, u = self.calc(to_exclude, minimize=minimize)
+                
+                if f is not None:
+                    print(np.round(dfH, 3), np.round(u, 3), 
+                          np.round(np.linalg.norm(self.dfH_grad), 3), 
+                          self.vectorizer.species_to_name(e), 
+                          file=f, sep='\t')
             
             self.excluded = to_exclude
             
+        if f is not None:
+            print('\nFinal: ', np.round(dfH, 3), np.round(u, 3), file=f, sep='\t')
+            f.close()
+        
         return dfH, u
     
     def calc(self, to_exclude=[], minimize=False):
@@ -97,17 +118,15 @@ class EnthalpyEstimator:
         NS = sp.linalg.null_space(A)
         
         if minimize:
-            U = np.diag(np.delete(self.u[1:], to_exclude))
-            M = np.block([[U, A.T], [A, np.zeros((A.shape[0], A.shape[0]))]])
-            Mb = np.r_[np.zeros(A.shape[1]), b]
-            x0 = np.linalg.lstsq(M, Mb, rcond=-1)[0][:A.shape[1]]
+            U_inv = np.linalg.pinv(np.diag(np.delete(self.u[1:], to_exclude)))
+            x0 = U_inv@np.linalg.lstsq(A@U_inv, b, rcond=-1)[0]
         else:
             x0 = np.linalg.lstsq(A, b, rcond=-1)[0]
         
         rxn = np.r_[-1, self._fill_zeros(x0, to_exclude)]
         dirs = np.r_[np.zeros(NS.shape[1])[None], self._fill_zeros(NS, to_exclude)]
         dfH, self.dfH_grad = self.evaluate(self.dfH, rxn, dirs)
-        u = rxn.T@np.diag(self.u)@rxn
+        u = np.linalg.norm(np.diag(self.u)@rxn)
         
         self.reaction = rxn
         self.directions = dirs

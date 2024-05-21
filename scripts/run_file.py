@@ -3,7 +3,6 @@ from enthalpy_estimator import mol_template
 import argparse
 import json
 import ast
-import sys
 import os
 
 parser = argparse.ArgumentParser()
@@ -13,6 +12,8 @@ args = parser.parse_args()
 config = {}
 with open(args.file, 'r') as f:
     for line in f:
+        if line.startswith('#') or not ':' in line: continue
+
         split = [s.strip() for s in line.split(':')]
         config[split[0]] = split[1]
         
@@ -21,7 +22,7 @@ os.chdir(os.path.dirname(os.path.abspath(args.file)))
 if config['method'] == 'gen':
     from enthalpy_estimator.generator import ReactionGenerator as method
 elif config['method'] == 'est':
-    from enthalpy_estimator.single_reaction import EnthaplyEstimator as method
+    from enthalpy_estimator.single_reaction import EnthalpyEstimator as method
 else:
     print('Unknown method')
     quit()
